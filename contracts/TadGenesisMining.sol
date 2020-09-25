@@ -1,21 +1,23 @@
+//SPDX-License-Identifier: MIT
+
 pragma solidity ^0.6.0;
 
-import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol";
-import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 
 contract TadGenesisMining {
   using SafeMath for uint256;
   
-  ERC20 constant public TenToken = ERC20(0x56C0369E002852C2570ca0CC3442E26df98E01A2);
-  ERC20 constant public TadToken = ERC20(0xf7853ef3295489e00604609F4CC4EE4FC7F8D7a8);
+  ERC20 public TenToken;
+  ERC20 public TadToken;
   
   mapping (address => uint) public stakeHolders;
   
   uint public totalStaked;
   
-  uint constant public startMiningBlockNum = 3459000;
-  uint constant public endMiningBlockNum = 3631800;
+  uint constant public startMiningBlockNum = 0; //dev env
+  uint constant public endMiningBlockNum = startMiningBlockNum+ 172800;
   uint constant public tadPerBlock = 1150000000000000000;
   
   uint public miningStateBlock = startMiningBlockNum;
@@ -27,6 +29,11 @@ contract TadGenesisMining {
   event Staked(address indexed user, uint256 amount, uint256 total);
   event Unstaked(address indexed user, uint256 amount, uint256 total);
   event ClaimedTad(address indexed user, uint amount, uint total);
+
+  constructor(ERC20 _tad, ERC20 _ten) public{
+    TadToken = _tad;
+    TenToken = _ten;
+  }
 
   function stake(uint256 _amount) public{
       
@@ -61,7 +68,7 @@ contract TadGenesisMining {
     withdrawStake(msg.sender, _amount);
       
   }
-  
+
   function withdrawStake(
     address _address,
     uint256 _amount
