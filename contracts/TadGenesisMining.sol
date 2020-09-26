@@ -12,31 +12,30 @@ contract TadGenesisMining {
   ERC20 public TenToken;
   ERC20 public TadToken;
   
-  mapping (address => uint) public stakeHolders;
-  
-  uint public totalStaked;
-  
-  uint constant public totalGenesisBlockNum = 172800;
-  uint constant public tadPerBlock = 1150000000000000000;
-
-  uint public startMiningBlockNum;
-  uint public endMiningBlockNum;
-  
-  uint public constant stakeInitialIndex = 1e36;
+  uint public startMiningBlockNum = 0;
+  uint public totalGenesisBlockNum = 172800;
+  uint public endMiningBlockNum = startMiningBlockNum + totalGenesisBlockNum;
+  uint public tadPerBlock = 1150000000000000000;
   
   uint public miningStateBlock = startMiningBlockNum;
   uint public miningStateIndex = stakeInitialIndex;
   
+  mapping (address => uint) public stakeHolders;
+  uint public totalStaked;
+
   mapping (address => uint) public stakerIndexes;
   mapping (address => uint) public stakerClaimed;
   uint public totalClaimed;
+  
+  uint public constant stakeInitialIndex = 1e36;
   
   event Staked(address indexed user, uint256 amount, uint256 total);
   event Unstaked(address indexed user, uint256 amount, uint256 total);
   event ClaimedTad(address indexed user, uint amount, uint total);
 
+  constructor(uint _startMiningBlocknum, uint _totalGenesisBlockNum, uint _tadPerBlock, ERC20 _tad, ERC20 _ten) public{
+    require(_totalGenesisBlockNum >= 100, "totalGenesisBlockNum is too small");
 
-  constructor(uint _startMiningBlocknum, ERC20 _tad, ERC20 _ten) public{
     if(_startMiningBlocknum == 0){
       _startMiningBlocknum = block.number;
     }
@@ -45,8 +44,10 @@ contract TadGenesisMining {
     _ten.totalSupply(); //sanity check
 
     startMiningBlockNum = _startMiningBlocknum;
+    totalGenesisBlockNum = _totalGenesisBlockNum;
     endMiningBlockNum = startMiningBlockNum + totalGenesisBlockNum;
     miningStateBlock = startMiningBlockNum;
+    tadPerBlock = _tadPerBlock;
     TadToken = _tad;
     TenToken = _ten;
   }
