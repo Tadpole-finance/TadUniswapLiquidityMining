@@ -16,25 +16,42 @@ contract TadGenesisMining {
   
   uint public totalStaked;
   
-  uint constant public startMiningBlockNum = 0; //dev env
-  uint constant public endMiningBlockNum = startMiningBlockNum+ 172800;
+  uint constant public totalGenesisBlockNum = 172800;
   uint constant public tadPerBlock = 1150000000000000000;
+
+  uint public startMiningBlockNum;
+  uint public endMiningBlockNum;
+  
+  uint public constant stakeInitialIndex = 1e36;
   
   uint public miningStateBlock = startMiningBlockNum;
-  uint public miningStateIndex;
+  uint public miningStateIndex = stakeInitialIndex;
   
   mapping (address => uint) public stakerIndexes;
-  mapping (address => uint) public tadClaimed;
+  mapping (address => uint) public stakerClaimed;
+  uint public totalClaimed;
   
   event Staked(address indexed user, uint256 amount, uint256 total);
   event Unstaked(address indexed user, uint256 amount, uint256 total);
   event ClaimedTad(address indexed user, uint amount, uint total);
 
-  constructor(ERC20 _tad, ERC20 _ten) public{
+
+  constructor(uint _startMiningBlocknum, ERC20 _tad, ERC20 _ten) public{
+    if(_startMiningBlocknum == 0){
+      _startMiningBlocknum = block.number;
+    }
+
+    _tad.totalSupply(); //sanity check
+    _ten.totalSupply(); //sanity check
+
+    startMiningBlockNum = _startMiningBlocknum;
+    endMiningBlockNum = startMiningBlockNum + totalGenesisBlockNum;
+    miningStateBlock = startMiningBlockNum;
     TadToken = _tad;
     TenToken = _ten;
   }
 
+    
   function stake(uint256 _amount) public{
       
       createStake(msg.sender, _amount);
@@ -55,7 +72,7 @@ contract TadGenesisMining {
     stakeHolders[_address] = stakeHolders[_address].add(_amount);
     totalStaked = totalStaked.add(_amount);
     
-    updateMiningState();
+    claimTad();
 
     emit Staked(
       _address,
@@ -68,7 +85,7 @@ contract TadGenesisMining {
     withdrawStake(msg.sender, _amount);
       
   }
-
+  
   function withdrawStake(
     address _address,
     uint256 _amount
@@ -101,26 +118,43 @@ contract TadGenesisMining {
   
   
   function updateMiningState() internal{
+    
+    if(miningStateBlock == endMiningBlockNum){ //if miningStateBlock is already the end of program, dont update state
+        return;
+    }
+    
+    (miningStateIndex, miningStateBlock) = getMiningState(block.number);
+    
+  }
+  
+  
+  function getMiningState(uint _blockNum) public view returns(uint, uint){
       
-    uint blockNumber = block.number;
+    uint blockNumber = _blockNum;
       
-    if(block.number>endMiningBlockNum){
+    if(_blockNum>endMiningBlockNum){ //if current block.number is bigger than the end of program, only update the state to endMiningBlockNum
         blockNumber = endMiningBlockNum;   
     }
       
     uint deltaBlocks = blockNumber.sub(uint(miningStateBlock));
     
+    uint _miningStateIndex = miningStateIndex;
+    
     if (deltaBlocks > 0) {
         uint tadAccrued = deltaBlocks.mul(tadPerBlock);
         uint ratio = tadAccrued.mul(1e18).div(totalStaked); //multiple ratio to 1e18 to prevent rounding error
-        miningStateIndex = miningStateIndex.add(ratio); //index is 1e18 precision
+        _miningStateIndex = miningStateIndex.add(ratio); //index is 1e18 precision
     } 
     
-    miningStateBlock = blockNumber;
+    uint _miningStateBlock = blockNumber;
+    
+    return (_miningStateIndex, _miningStateBlock);
     
   }
   
   function claimTad() public {
+      
+      updateMiningState();
       
       uint claimableTad = claimableTad(msg.sender);
       
@@ -128,15 +162,26 @@ contract TadGenesisMining {
       
       if(claimableTad > 0){
           
-          tadClaimed[msg.sender] = tadClaimed[msg.sender].add(claimableTad);
+          stakerClaimed[msg.sender] = stakerClaimed[msg.sender].add(claimableTad);
+          totalClaimed = totalClaimed.add(claimableTad);
           TadToken.transfer(msg.sender, claimableTad);
-          emit ClaimedTad(msg.sender, claimableTad, tadClaimed[msg.sender]);
+          emit ClaimedTad(msg.sender, claimableTad, stakerClaimed[msg.sender]);
           
       }
   }
   
   function claimableTad(address _address) public view returns(uint){
       uint stakerIndex = stakerIndexes[_address];
+        
+        //if it's the first stake for user and the first stake for entire mining program, set stakerIndex as stakeInitialIndex
+        if (stakerIndex == 0 && totalClaimed == 0) {
+            stakerIndex = stakeInitialIndex;
+        }
+        
+        //else if it's the first stake for user, set stakerIndex as current miningStateIndex
+        if(stakerIndex == 0){
+            stakerIndex = miningStateIndex;
+        }
       
       uint deltaIndex = miningStateIndex.sub(stakerIndex);
       uint tadDelta = deltaIndex.mul(stakeHolders[_address]).div(1e18);
