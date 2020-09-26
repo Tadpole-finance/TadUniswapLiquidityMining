@@ -6,6 +6,6 @@ module.exports = async function(deployer) {
     await deployer.deploy(TenTokenTest);
     await deployer.deploy(TadTokenTest);
 
-    await deployer.deploy(TadGenesisMining, TadTokenTest.address, TenTokenTest.address);
+    await deployer.deploy(TadGenesisMining, 0, TadTokenTest.address, TenTokenTest.address);
     
 }
