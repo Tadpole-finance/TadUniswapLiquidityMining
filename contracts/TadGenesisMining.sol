@@ -83,6 +83,13 @@ contract TadGenesisMining {
   
   
   function unstake(uint256 _amount) public{
+  
+    if(_amount==0){
+      _amount = stakeHolders[msg.sender];
+    }
+
+    require(_amount > 0, "No stake to unstake");
+
     withdrawStake(msg.sender, _amount);
       
   }
@@ -190,5 +197,9 @@ contract TadGenesisMining {
       return tadDelta;
           
   }
+
+    function doNothing() public{
+        //test function to skip blocks on dev env
+    }
     
 }
