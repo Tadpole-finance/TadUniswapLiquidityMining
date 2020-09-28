@@ -1,3 +1,5 @@
+var BN = web3.utils.BN;
+
 const TenTokenTest = artifacts.require('TenTokenTest');
 const TadTokenTest = artifacts.require('TadTokenTest');
 const TadGenesisMining = artifacts.require('TadGenesisMining');
@@ -59,11 +61,15 @@ contract('TadGenesisMining', (accounts) => {
     });
 
     it('should claim 115 TAD after 100 blocks', async () =>{
-        for(i=0; i<94; i++){ //block 6-99
-            await tenTokenTestInstance.mint(accounts[1], "100000000000000000000000", { from: accounts[0] });
-        }
 
         genesisInstance = await TadGenesisMining.deployed();
+        
+        //block 6
+        await tenTokenTestInstance.mint(accounts[1], "10000000000000000000000000", { from: accounts[0] });
+
+        for(i=0; i<93; i++){ //block 7-99
+            await genesisInstance.doNothing({ from: accounts[0] });
+        }
 
         //block 100
         await genesisInstance.claimTad({ from: accounts[0] });
@@ -97,7 +103,7 @@ contract('TadGenesisMining', (accounts) => {
         genesisInstance = await TadGenesisMining.deployed();
 
         for(i=0; i<4; i++){ //block 104-107
-            await tenTokenTestInstance.mint(accounts[1], "100000000000000000000000", { from: accounts[0] });
+            await genesisInstance.doNothing({ from: accounts[1] });
         }
 
         //block 108
@@ -121,6 +127,96 @@ contract('TadGenesisMining', (accounts) => {
 
         //1.15/1250*1000 * 9 + 115
         assert.equal(balance, "123280000000000000000", 'Did not claim 8.28 TAD');
+    });
+
+    it('should accept stake of 1250 TEN from account2', async() => {
+
+        genesisInstance = await TadGenesisMining.deployed();
+
+        //block 110
+        await tenTokenTestInstance.mint(accounts[2], "100000000000000000000000", { from: accounts[0] });
+
+        //block 111
+        await tenTokenTestInstance.approve(TadGenesisMining.address, "500000000000000000000000000", { from: accounts[2] });
+        
+        //block 112
+        await genesisInstance.stake("1250000000000000000000", { from: accounts[2] }); 
+
+        stake = await genesisInstance.stakeHolders(accounts[2]);
+        assert.equal(stake, "1250000000000000000000", 'Stake account2 != 1250 TEN');
+
+    });
+
+    it('should be able to unstake 500 TEN from account2', async()=>{
+        genesisInstance = await TadGenesisMining.deployed();
+
+        //block 113
+        await genesisInstance.unstake("500000000000000000000", { from: accounts[2] }); 
+
+        stake = await genesisInstance.stakeHolders(accounts[2]);
+        assert.equal(stake, "750000000000000000000", 'Stake account2 != 750 TEN');
+    });
+
+    it('should give correct claim balances after current block exceeds endMiningBlockNum', async()=>{
+
+        genesisInstance = await TadGenesisMining.deployed();
+        
+        for(i=0; i<100; i++){ //block 114-213
+            await genesisInstance.doNothing({ from: accounts[0] });
+        }
+
+        await genesisInstance.claimTad({ from: accounts[0] });
+        await genesisInstance.claimTad({ from: accounts[1] });
+        await genesisInstance.claimTad({ from: accounts[2] });
+
+        balance0 = await tadTokenTestInstance.balanceOf(accounts[0]);
+        balance1 = await tadTokenTestInstance.balanceOf(accounts[1]);
+        balance2 = await tadTokenTestInstance.balanceOf(accounts[2]);
+
+        // 123.28+(1.15÷2000×1000)×(200−113)+(1.15÷2500×1000)×(113−109) = 175.145
+        assert.equal(balance0, "175145000000000000000", 'balance account0 != 175.145 TAD');
+        
+        // ((1.15÷1250×250)×(103−102))+((1.15÷1250×250)×(109−103))+((1.15÷2000×250)×(200−113))+((1.15÷2500×250)×(113−109)) = 14.57625
+        assert.equal(balance1, "14576250000000000000", 'balance account1 != 14.57625 TAD');
+        
+        // 0+(1.15÷2000×750)×(200−113)+(1.15÷2500×1250)×(113−112) = 38.09375
+        assert.equal(balance2, "38093750000000000000", 'balance account2 != 38.09375 TAD');
+
+    });
+
+    it("should return correct TEN value when unstake", async()=>{
+
+        genesisInstance = await TadGenesisMining.deployed();
+
+        balance0_before = await tenTokenTestInstance.balanceOf(accounts[0]);
+        balance1_before = await tenTokenTestInstance.balanceOf(accounts[1]);
+        balance2_before = await tenTokenTestInstance.balanceOf(accounts[2]);
+
+        await genesisInstance.unstake(0, { from: accounts[0] });
+        await genesisInstance.unstake(0, { from: accounts[1] });
+        await genesisInstance.unstake(0, { from: accounts[2] });
+
+        balance0_after = await tenTokenTestInstance.balanceOf(accounts[0]);
+        balance1_after = await tenTokenTestInstance.balanceOf(accounts[1]);
+        balance2_after = await tenTokenTestInstance.balanceOf(accounts[2]);
+
+        assert.equal(new BN(balance0_after).sub(new BN(balance0_before)), "1000000000000000000000", 'unstake account0 != 1000 TEN');
+        assert.equal(new BN(balance1_after).sub(new BN(balance1_before)), "250000000000000000000", 'unstake account0 != 250 TEN');
+        assert.equal(new BN(balance2_after).sub(new BN(balance2_before)), "750000000000000000000", 'unstake account0 != 1250 TEN');
+
+    });
+
+    it("should hold 0 TEN", async()=>{
+        
+        genesisInstance = await TadGenesisMining.deployed();
+
+        tenBalanceGenesis = await tenTokenTestInstance.balanceOf(TadGenesisMining.address);
+        totalStaked = await genesisInstance.totalStaked();
+
+
+        assert.equal(tenBalanceGenesis, "0", 'ten balance in genesis contract is supposed to be 0');
+        assert.equal(totalStaked, "0", 'total stake is supposed to be 0');
+        
     });
 
     
