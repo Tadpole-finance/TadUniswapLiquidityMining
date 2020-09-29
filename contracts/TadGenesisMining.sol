@@ -18,6 +18,8 @@ contract TadGenesisMining is Ownable, Pausable {
   uint public endMiningBlockNum = startMiningBlockNum + totalGenesisBlockNum;
   uint public tadPerBlock = 1150000000000000000;
   
+  uint public constant stakeInitialIndex = 1e36;
+  
   uint public miningStateBlock = startMiningBlockNum;
   uint public miningStateIndex = stakeInitialIndex;
   
@@ -27,8 +29,6 @@ contract TadGenesisMining is Ownable, Pausable {
   mapping (address => uint) public stakerIndexes;
   mapping (address => uint) public stakerClaimed;
   uint public totalClaimed;
-  
-  uint public constant stakeInitialIndex = 1e36;
   
   event Staked(address indexed user, uint256 amount, uint256 total);
   event Unstaked(address indexed user, uint256 amount, uint256 total);
@@ -51,6 +51,7 @@ contract TadGenesisMining is Ownable, Pausable {
     tadPerBlock = _tadPerBlock;
     TadToken = _tad;
     TenToken = _ten;
+
   }
 
   // @notice stake some TEN
@@ -67,15 +68,20 @@ contract TadGenesisMining is Ownable, Pausable {
   )
     internal
   {
+
+    claimTad();
+    
+    require(block.number<endMiningBlockNum, "staking period has ended");
       
     require(
       TenToken.transferFrom(_address, address(this), _amount),
       "Stake required");
 
     stakeHolders[_address] = stakeHolders[_address].add(_amount);
+
+
     totalStaked = totalStaked.add(_amount);
     
-    claimTad();
 
     emit Staked(
       _address,
@@ -104,7 +110,7 @@ contract TadGenesisMining is Ownable, Pausable {
   )
     internal
   {
-    
+
     claimTad();
 
     require(
@@ -117,7 +123,7 @@ contract TadGenesisMining is Ownable, Pausable {
 
     stakeHolders[_address] = stakeHolders[_address].sub(_amount);
     totalStaked = totalStaked.sub(_amount);
-    
+
     updateMiningState();
 
     emit Unstaked(
@@ -150,15 +156,15 @@ contract TadGenesisMining is Ownable, Pausable {
       
     uint deltaBlocks = blockNumber.sub(miningStateBlock);
     
+    uint _miningStateBlock = miningStateBlock;
     uint _miningStateIndex = miningStateIndex;
     
-    if (deltaBlocks > 0) {
+    if (deltaBlocks > 0 && totalStaked > 0) {
         uint tadAccrued = deltaBlocks.mul(tadPerBlock);
         uint ratio = tadAccrued.mul(1e18).div(totalStaked); //multiple ratio to 1e18 to prevent rounding error
         _miningStateIndex = miningStateIndex.add(ratio); //index is 1e18 precision
+        _miningStateBlock = blockNumber;
     } 
-    
-    uint _miningStateBlock = blockNumber;
     
     return (_miningStateIndex, _miningStateBlock);
     
@@ -187,8 +193,8 @@ contract TadGenesisMining is Ownable, Pausable {
   function claimableTad(address _address) public view returns(uint){
       uint stakerIndex = stakerIndexes[_address];
         
-        //if it's the first stake for user and the first stake for entire mining program, set stakerIndex as stakeInitialIndex
-        if (stakerIndex == 0 && totalClaimed == 0) {
+        // if it's the first stake for user and the first stake for entire mining program, set stakerIndex as stakeInitialIndex
+        if (stakerIndex == 0 && totalStaked == 0) {
             stakerIndex = stakeInitialIndex;
         }
         
