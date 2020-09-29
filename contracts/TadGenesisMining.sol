@@ -3,10 +3,11 @@
 pragma solidity ^0.6.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 
-contract TadGenesisMining {
+contract TadGenesisMining is Ownable, Pausable {
   using SafeMath for uint256;
   
   ERC20 public TenToken;
@@ -52,13 +53,14 @@ contract TadGenesisMining {
     TenToken = _ten;
   }
 
-    
-  function stake(uint256 _amount) public{
+  // @notice stake some TEN
+  // @param _amount some amount of TEN, requires enought allowence from TEN smart contract
+  function stake(uint256 _amount) public whenNotPaused{
       
       createStake(msg.sender, _amount);
   }
   
-  
+  // @notice internal function for staking
   function createStake(
     address _address,
     uint256 _amount
@@ -81,8 +83,9 @@ contract TadGenesisMining {
       stakeHolders[_address]);
   }
   
-  
-  function unstake(uint256 _amount) public{
+  // @notice unstake TEN token
+  // @param _amount if 0, unstake all TEN available
+  function unstake(uint256 _amount) public whenNotPaused{
   
     if(_amount==0){
       _amount = stakeHolders[msg.sender];
@@ -94,6 +97,7 @@ contract TadGenesisMining {
       
   }
   
+  // @notice internal function for unstaking
   function withdrawStake(
     address _address,
     uint256 _amount
@@ -122,9 +126,7 @@ contract TadGenesisMining {
       stakeHolders[_address]);
   }
   
-
-  
-  
+  // @notice internal function for updating mining state
   function updateMiningState() internal{
     
     if(miningStateBlock == endMiningBlockNum){ //if miningStateBlock is already the end of program, dont update state
@@ -135,8 +137,10 @@ contract TadGenesisMining {
     
   }
   
-  
+  // @notice calculate current mining state
   function getMiningState(uint _blockNum) public view returns(uint, uint){
+
+    require(_blockNum >= miningStateBlock, "_blockNum must be >= miningStateBlock");
       
     uint blockNumber = _blockNum;
       
@@ -144,7 +148,7 @@ contract TadGenesisMining {
         blockNumber = endMiningBlockNum;   
     }
       
-    uint deltaBlocks = blockNumber.sub(uint(miningStateBlock));
+    uint deltaBlocks = blockNumber.sub(miningStateBlock);
     
     uint _miningStateIndex = miningStateIndex;
     
@@ -160,7 +164,8 @@ contract TadGenesisMining {
     
   }
   
-  function claimTad() public {
+  // @notice claim TAD based on current state 
+  function claimTad() public whenNotPaused {
       
       updateMiningState();
       
@@ -178,6 +183,7 @@ contract TadGenesisMining {
       }
   }
   
+  // @notice calculate claimable tad based on current state
   function claimableTad(address _address) public view returns(uint){
       uint stakerIndex = stakerIndexes[_address];
         
@@ -198,8 +204,25 @@ contract TadGenesisMining {
           
   }
 
+    // @notice test function
     function doNothing() public{
-        //test function to skip blocks on dev env
+    }
+
+    /*======== admin functions =========*/
+
+    // @notice admin function to pause the contract
+    function pause() public onlyOwner{
+      _pause();
+    }
+
+    // @notice admin function to unpause the contract
+    function unpause() public onlyOwner{
+      _unpause();
+    }
+
+    // @notice admin function to send TAD to external address, for emergency use
+    function sendTad(address _to, uint _amount) public onlyOwner{
+      TadToken.transfer(_to, _amount);
     }
     
 }
