@@ -57,7 +57,7 @@ contract('TadGenesisMining', (accounts) => {
         //block 5
         await genesisInstance.claimTad({ from: accounts[0] });
         balance = await tadTokenTestInstance.balanceOf(accounts[0]);
-        assert.equal(balance, "5750000000000000000", 'Didnt claim 5.75 TEN');
+        assert.equal(balance.toString(), "5750000000000000000", 'Didnt claim 5.75 TEN');
     });
 
     it('should claim 115 TAD after 100 blocks', async () =>{
@@ -116,7 +116,7 @@ contract('TadGenesisMining', (accounts) => {
     });
 
 
-    it('should claim 8.28 TAD for account0 after 9 blocks since last claim', async () =>{
+    it('should have 123.74 TAD for account0', async () =>{
 
         genesisInstance = await TadGenesisMining.deployed();
 
@@ -125,8 +125,8 @@ contract('TadGenesisMining', (accounts) => {
         
         balance = await tadTokenTestInstance.balanceOf(accounts[0]);
 
-        //1.15/1250*1000 * 9 + 115
-        assert.equal(balance, "123280000000000000000", 'Did not claim 8.28 TAD');
+        //1.15/1250*1000 * (109-102) + 1.15/1000*1000 * (102-100) + 115
+        assert.equal(balance.toString(), "123740000000000000000", 'Did not claim 123.74 TAD');
     });
 
     it('should accept stake of 1250 TEN from account2', async() => {
@@ -173,14 +173,14 @@ contract('TadGenesisMining', (accounts) => {
         balance1 = await tadTokenTestInstance.balanceOf(accounts[1]);
         balance2 = await tadTokenTestInstance.balanceOf(accounts[2]);
 
-        // 123.28+(1.15÷2000×1000)×(200−113)+(1.15÷2500×1000)×(113−109) = 175.145
-        assert.equal(balance0, "175145000000000000000", 'balance account0 != 175.145 TAD');
+        // 123.74+ (112−109)÷1250×1000×1.15 + (113−112)÷2500×1000×1.15 + (200−113)÷2000×1000×1.15 = 176.985
+        assert.equal(balance0.toString(), "176985000000000000000", 'balance account0 != 175.145 TAD');
         
-        // ((1.15÷1250×250)×(103−102))+((1.15÷1250×250)×(109−103))+((1.15÷2000×250)×(200−113))+((1.15÷2500×250)×(113−109)) = 14.57625
-        assert.equal(balance1, "14576250000000000000", 'balance account1 != 14.57625 TAD');
+        // (112−102)÷1250×250×1.15 + (113−112)÷2500×250×1.15 + (200−113)÷2000×250×1.15
+        assert.equal(balance1.toString(), "14921250000000000000", 'balance account1 != 14.92125 TAD');
         
         // 0+(1.15÷2000×750)×(200−113)+(1.15÷2500×1250)×(113−112) = 38.09375
-        assert.equal(balance2, "38093750000000000000", 'balance account2 != 38.09375 TAD');
+        assert.equal(balance2.toString(), "38093750000000000000", 'balance account2 != 38.09375 TAD');
 
     });
 

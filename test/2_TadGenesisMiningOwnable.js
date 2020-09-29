@@ -35,9 +35,7 @@ contract('TadGenesisMining', (accounts) => {
         await genesisInstance.sendTad(accounts[0], 1234567890, {from: accounts[0]});
         balance = await tadInstance.balanceOf(TadGenesisMining.address);
 
-        console.log(balance_before, balance_after);
-
-        assert.equal(balance_after, 0, 'TAD balance is different');
+        assert.equal(balance, 0, 'TAD balance is different');
         
     });
 
