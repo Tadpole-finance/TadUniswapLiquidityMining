@@ -4,37 +4,19 @@ pragma solidity ^0.6.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "./TadGenesisMiningStorage.sol";
 
 
-contract TadGenesisMining is Ownable, Pausable {
-  using SafeMath for uint256;
-  
-  ERC20 public TenToken;
-  ERC20 public TadToken;
-  
-  uint public startMiningBlockNum = 0;
-  uint public totalGenesisBlockNum = 172800;
-  uint public endMiningBlockNum = startMiningBlockNum + totalGenesisBlockNum;
-  uint public tadPerBlock = 1150000000000000000;
-  
-  uint public constant stakeInitialIndex = 1e36;
-  
-  uint public miningStateBlock = startMiningBlockNum;
-  uint public miningStateIndex = stakeInitialIndex;
-  
-  mapping (address => uint) public stakeHolders;
-  uint public totalStaked;
-
-  mapping (address => uint) public stakerIndexes;
-  mapping (address => uint) public stakerClaimed;
-  uint public totalClaimed;
+contract TadGenesisMining is Ownable, Pausable, TadGenesisMiningStorage {
   
   event Staked(address indexed user, uint256 amount, uint256 total);
   event Unstaked(address indexed user, uint256 amount, uint256 total);
   event ClaimedTad(address indexed user, uint amount, uint total);
 
-  constructor(uint _startMiningBlocknum, uint _totalGenesisBlockNum, uint _tadPerBlock, ERC20 _tad, ERC20 _ten) public{
+  function initiate(uint _startMiningBlocknum, uint _totalGenesisBlockNum, uint _tadPerBlock, ERC20 _tad, ERC20 _ten) public onlyOwner{
+    require(initiated==false, "contract is already initiated");
+    initiated = true;
+
     require(_totalGenesisBlockNum >= 100, "totalGenesisBlockNum is too small");
 
     if(_startMiningBlocknum == 0){
