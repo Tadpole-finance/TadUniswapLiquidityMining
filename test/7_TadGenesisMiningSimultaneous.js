@@ -8,6 +8,7 @@ const wei = new BN("1000000000000000000");
 const TenTokenTest = artifacts.require('TenTokenTest');
 const TadTokenTest = artifacts.require('TadTokenTest');
 const TadGenesisMining = artifacts.require('TadGenesisMining');
+const TadGenesisMiningProxy = artifacts.require('TadGenesisMiningProxy');
 
 var tenInstance;
 var tadInstance;
@@ -15,14 +16,28 @@ var genesisInstance;
 
 const tadPerBlock = new BN("1150000000000000000");
 const totalGenesisBlockNum = new BN("1000");
-const maxClaimed = tadPerBlock.mul(totalGenesisBlockNum)
+const maxClaimed = tadPerBlock.mul(totalGenesisBlockNum);
 
 contract('TadGenesisMining', async (accounts) => {
+
+    // to run this test, use ganache
+    // run this command in a new terminal:
+    // ganache-cli -m "candy maple cake sugar pudding cream honey rich smooth crumble sweet treat" -u 0,1,2,3,4,5,6,7,8,9,10 --gasLimit 0x2FEFD800000 -a 100 --defaultBalanceEther 10000 --blockTime 2 -t "2020-09-30T07:00:00+0000" --networkId 55555
+    // then in truffle console, execute:
+    // test --network ganache test/7_TadGenesisMiningSimultaneous.js
+
+    before("check if we are on ganache", async()=>{
+        let netId = await web3.eth.net.getId();
+        if(netId != 55555) throw new Error("not on ganache, this error is expected if you run all the tests");
+    });
+
+
     it('should deploy new contracts on ganache', async ()=>{
         tenInstance = await TenTokenTest.new();
         tadInstance = await TadTokenTest.new();
-        genesisInstance = await TadGenesisMining.new(0, totalGenesisBlockNum.toString(), tadPerBlock.toString(), tadInstance.address, tenInstance.address);
-
+        genesisProxyInstance = await TadGenesisMiningProxy.new(TadGenesisMining.address);
+        genesisInstance = await TadGenesisMining.at(genesisProxyInstance.address);
+        await genesisInstance.initiate(0, totalGenesisBlockNum.toString(), tadPerBlock.toString(), tadInstance.address, tenInstance.address); //block 0
 
     });
 
@@ -146,7 +161,7 @@ contract('TadGenesisMining', async (accounts) => {
                     break;
                 default:
                     await web3.currentProvider.send({ jsonrpc: "2.0",  method: "evm_mine" }, function(){});
-              } 
+            } 
         }
     });
 
@@ -200,7 +215,7 @@ contract('TadGenesisMining', async (accounts) => {
         printLog();
     });
 
-    
+        
 
 
 });

@@ -4,6 +4,7 @@ var BN = web3.utils.BN;
 const TenTokenTest = artifacts.require('TenTokenTest');
 const TadTokenTest = artifacts.require('TadTokenTest');
 const TadGenesisMining = artifacts.require('TadGenesisMining');
+const TadGenesisMiningProxy = artifacts.require('TadGenesisMiningProxy');
 
 var tenInstance;
 var tadInstance;
@@ -17,7 +18,9 @@ contract('TadGenesisMining', (accounts) => {
     it('should deploy new contracts', async ()=>{
         tenInstance = await TenTokenTest.new();
         tadInstance = await TadTokenTest.new();
-        genesisInstance = await TadGenesisMining.new(0, totalGenesisBlockNum.toString(), tadPerBlock.toString(), tadInstance.address, tenInstance.address); //block 0
+        genesisProxyInstance = await TadGenesisMiningProxy.new(TadGenesisMining.address);
+        genesisInstance = await TadGenesisMining.at(genesisProxyInstance.address);
+        await genesisInstance.initiate(0, totalGenesisBlockNum.toString(), tadPerBlock.toString(), tadInstance.address, tenInstance.address); //block 0
 
         //block 1-100
         for(i=0; i<100; i++){

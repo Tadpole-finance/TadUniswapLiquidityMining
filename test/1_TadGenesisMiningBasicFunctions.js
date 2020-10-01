@@ -8,6 +8,8 @@ var tadTokenTestInstance;
 var tenTokenTestInstance;
 
 contract('TadGenesisMining', (accounts) => {
+
+
     it('should mint 1000000 TAD to Genesis Contract', async () => {
         tadTokenTestInstance = await TadTokenTest.deployed();
 
