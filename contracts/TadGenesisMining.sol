@@ -97,7 +97,9 @@ contract TadGenesisMining is Ownable, Pausable {
       _amount = stakeHolders[msg.sender];
     }
 
-    require(_amount > 0, "No stake to unstake");
+    if(_amount == 0){ // if staking balance == 0, do nothing
+      return;
+    }
 
     withdrawStake(msg.sender, _amount);
       
@@ -113,12 +115,12 @@ contract TadGenesisMining is Ownable, Pausable {
 
     claimTad();
 
-    require(
-      stakeHolders[_address] >= _amount,
-      "The unstake amount is bigger than the current stake");
+    if(_amount > stakeHolders[_address]){ //if amount is larger than owned
+      _amount = stakeHolders[_address];
+    }
 
     require(
-      TenToken.transfer(msg.sender, _amount),
+      TenToken.transfer(_address, _amount),
       "Unable to withdraw stake");
 
     stakeHolders[_address] = stakeHolders[_address].sub(_amount);
