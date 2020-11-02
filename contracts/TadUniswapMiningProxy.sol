@@ -5,25 +5,25 @@ pragma solidity ^0.6.0;
 import "./TadUniswapMining.sol";
 import "./TadUniswapMiningStorage.sol";
 
-contract TadUniswapMiningProxy is OwnableStorage, PausableStorage, TadGenesisMiningStorage {
+contract TadUniswapMiningProxy is OwnableStorage, PausableStorage, TadUniswapMiningStorage {
 
     event NewImplementation(address oldImplementation, address newImplementation);
 
     event NewAdmin(address oldAdmin, address newAdmin);
 
-    constructor(TadGenesisMining newImplementation) public {
+    constructor(TadUniswapMining newImplementation) public {
 
         admin = msg.sender;
         _owner = msg.sender;
 
-        require(newImplementation.isTadGenesisMining() == true, "invalid implementation");
+        require(newImplementation.isTadUniswapMining() == true, "invalid implementation");
         implementation = address(newImplementation);
 
         emit NewImplementation(address(0), implementation);
     }
 
     /*** Admin Functions ***/
-    function _setImplementation(TadGenesisMining  newImplementation) public {
+    function _setImplementation(TadUniswapMining  newImplementation) public {
 
         require(msg.sender==admin, "UNAUTHORIZED");
 
