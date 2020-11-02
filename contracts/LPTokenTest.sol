@@ -5,8 +5,8 @@ pragma solidity ^0.6.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract TenTokenTest is ERC20, Ownable{
-    constructor() public ERC20("Tokenomy", "TEN")  {
+contract LPTokenTest is ERC20, Ownable{
+    constructor() public ERC20("Uniswap V2", "UNI-V2")  {
 
     }
 
