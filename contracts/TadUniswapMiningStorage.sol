@@ -12,7 +12,7 @@ contract PausableStorage{
     bool internal _paused;
 }
 
-contract TadGenesisMiningStorage {
+contract TadUniswapMiningStorage {
   using SafeMath for uint256;
 
   bool constant public isTadGenesisMining = true;

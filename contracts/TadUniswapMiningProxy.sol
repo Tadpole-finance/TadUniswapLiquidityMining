@@ -2,10 +2,10 @@
 
 pragma solidity ^0.6.0;
 
-import "./TadGenesisMining.sol";
-import "./TadGenesisMiningStorage.sol";
+import "./TadUniswapMining.sol";
+import "./TadUniswapMiningStorage.sol";
 
-contract TadGenesisMiningProxy is OwnableStorage, PausableStorage, TadGenesisMiningStorage {
+contract TadUniswapMiningProxy is OwnableStorage, PausableStorage, TadGenesisMiningStorage {
 
     event NewImplementation(address oldImplementation, address newImplementation);
 

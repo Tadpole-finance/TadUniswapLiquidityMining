@@ -4,10 +4,10 @@ pragma solidity ^0.6.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
-import "./TadGenesisMiningStorage.sol";
+import "./TadUniswapMiningStorage.sol";
 
 
-contract TadGenesisMining is Ownable, Pausable, TadGenesisMiningStorage {
+contract TadUniswapMining is Ownable, Pausable, TadGenesisMiningStorage {
   
   event Staked(address indexed user, uint256 amount, uint256 total);
   event Unstaked(address indexed user, uint256 amount, uint256 total);
