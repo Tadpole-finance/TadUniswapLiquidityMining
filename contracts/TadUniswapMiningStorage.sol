@@ -26,9 +26,9 @@ contract TadUniswapMiningStorage {
   ERC20 public TadToken;
   
   uint public startMiningBlockNum = 0;
-  uint public totalMiningBlockNum = 4800000;
+  uint public totalMiningBlockNum = 2400000;
   uint public endMiningBlockNum = startMiningBlockNum + totalMiningBlockNum;
-  uint public tadPerBlock = 41666666666666666;
+  uint public tadPerBlock = 83333333333333333;
   
   uint public constant stakeInitialIndex = 1e36;
   
