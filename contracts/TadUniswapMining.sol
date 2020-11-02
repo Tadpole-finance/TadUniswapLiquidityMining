@@ -7,37 +7,37 @@ import "@openzeppelin/contracts/utils/Pausable.sol";
 import "./TadUniswapMiningStorage.sol";
 
 
-contract TadUniswapMining is Ownable, Pausable, TadGenesisMiningStorage {
+contract TadUniswapMining is Ownable, Pausable, TadUniswapMiningStorage {
   
   event Staked(address indexed user, uint256 amount, uint256 total);
   event Unstaked(address indexed user, uint256 amount, uint256 total);
   event ClaimedTad(address indexed user, uint amount, uint total);
 
-  function initiate(uint _startMiningBlocknum, uint _totalGenesisBlockNum, uint _tadPerBlock, ERC20 _tad, ERC20 _ten) public onlyOwner{
+  function initiate(uint _startMiningBlocknum, uint _totalMiningBlockNum, uint _tadPerBlock, ERC20 _tad, ERC20 _lp) public onlyOwner{
     require(initiated==false, "contract is already initiated");
     initiated = true;
 
-    require(_totalGenesisBlockNum >= 100, "totalGenesisBlockNum is too small");
+    require(_totalMiningBlockNum >= 100, "_totalMiningBlockNum is too small");
 
     if(_startMiningBlocknum == 0){
       _startMiningBlocknum = block.number;
     }
 
     _tad.totalSupply(); //sanity check
-    _ten.totalSupply(); //sanity check
+    _lp.totalSupply(); //sanity check
 
     startMiningBlockNum = _startMiningBlocknum;
-    totalGenesisBlockNum = _totalGenesisBlockNum;
-    endMiningBlockNum = startMiningBlockNum + totalGenesisBlockNum;
+    totalMiningBlockNum = _totalMiningBlockNum;
+    endMiningBlockNum = startMiningBlockNum + totalMiningBlockNum;
     miningStateBlock = startMiningBlockNum;
     tadPerBlock = _tadPerBlock;
     TadToken = _tad;
-    TenToken = _ten;
+    LPToken = _lp;
 
   }
 
-  // @notice stake some TEN
-  // @param _amount some amount of TEN, requires enought allowence from TEN smart contract
+  // @notice stake some LP tokens
+  // @param _amount some amount of LP tokens, requires enought allowence from LP token smart contract
   function stake(uint256 _amount) public whenNotPaused{
       
       createStake(msg.sender, _amount);
@@ -56,7 +56,7 @@ contract TadUniswapMining is Ownable, Pausable, TadGenesisMiningStorage {
     require(block.number<endMiningBlockNum, "staking period has ended");
       
     require(
-      TenToken.transferFrom(_address, address(this), _amount),
+      LPToken.transferFrom(_address, address(this), _amount),
       "Stake required");
 
     stakeHolders[_address] = stakeHolders[_address].add(_amount);
@@ -71,8 +71,8 @@ contract TadUniswapMining is Ownable, Pausable, TadGenesisMiningStorage {
       stakeHolders[_address]);
   }
   
-  // @notice unstake TEN token
-  // @param _amount if 0, unstake all TEN available
+  // @notice unstake LP token
+  // @param _amount if 0, unstake all LP token available
   function unstake(uint256 _amount) public whenNotPaused{
   
     if(_amount==0){
@@ -102,7 +102,7 @@ contract TadUniswapMining is Ownable, Pausable, TadGenesisMiningStorage {
     }
 
     require(
-      TenToken.transfer(_address, _amount),
+      LPToken.transfer(_address, _amount),
       "Unable to withdraw stake");
 
     stakeHolders[_address] = stakeHolders[_address].sub(_amount);

@@ -15,20 +15,20 @@ contract PausableStorage{
 contract TadUniswapMiningStorage {
   using SafeMath for uint256;
 
-  bool constant public isTadGenesisMining = true;
+  bool constant public isTadUniswapMining = true;
   bool public initiated = false;
 
   // proxy storage
   address public admin;
   address public implementation;
   
-  ERC20 public TenToken;
+  ERC20 public LPToken;
   ERC20 public TadToken;
   
   uint public startMiningBlockNum = 0;
-  uint public totalGenesisBlockNum = 172800;
-  uint public endMiningBlockNum = startMiningBlockNum + totalGenesisBlockNum;
-  uint public tadPerBlock = 1150000000000000000;
+  uint public totalMiningBlockNum = 4800000;
+  uint public endMiningBlockNum = startMiningBlockNum + totalMiningBlockNum;
+  uint public tadPerBlock = 41666666666666666;
   
   uint public constant stakeInitialIndex = 1e36;
   

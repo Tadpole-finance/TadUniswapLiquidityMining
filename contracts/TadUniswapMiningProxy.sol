@@ -27,7 +27,7 @@ contract TadUniswapMiningProxy is OwnableStorage, PausableStorage, TadGenesisMin
 
         require(msg.sender==admin, "UNAUTHORIZED");
 
-        require(newImplementation.isTadGenesisMining() == true, "invalid implementation");
+        require(newImplementation.isTadUniswapMining() == true, "invalid implementation");
 
         address oldImplementation = implementation;
 
