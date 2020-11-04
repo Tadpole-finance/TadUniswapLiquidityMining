@@ -1,18 +1,18 @@
 
 const truffleAssert = require('truffle-assertions');
 
-const TadGenesisMining = artifacts.require('TadGenesisMining');
+const TadUniswapMining = artifacts.require('TadUniswapMining');
 
-contract('TadGenesisMining', (accounts) => {
+contract('TadUniswapMining', (accounts) => {
 
     it('should revert all public functions if it is paused', async () => {
-        genesisInstance = await TadGenesisMining.deployed();
+        miningInstance = await TadUniswapMining.deployed();
 
-        await genesisInstance.pause({from: accounts[0]});
+        await miningInstance.pause({from: accounts[0]});
 
-        await truffleAssert.reverts(genesisInstance.stake(1, {from: accounts[0]}), "Pausable: paused");
-        await truffleAssert.reverts(genesisInstance.unstake(1, {from: accounts[0]}), "Pausable: paused");
-        await truffleAssert.reverts(genesisInstance.claimTad({from: accounts[0]}), "Pausable: paused");
+        await truffleAssert.reverts(miningInstance.stake(1, {from: accounts[0]}), "Pausable: paused");
+        await truffleAssert.reverts(miningInstance.unstake(1, {from: accounts[0]}), "Pausable: paused");
+        await truffleAssert.reverts(miningInstance.claimTad({from: accounts[0]}), "Pausable: paused");
         
     });
 
