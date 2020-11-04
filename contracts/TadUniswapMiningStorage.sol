@@ -34,10 +34,23 @@ contract TadUniswapMiningStorage {
   
   uint public miningStateBlock = startMiningBlockNum;
   uint public miningStateIndex = stakeInitialIndex;
-  
-  mapping (address => uint) public stakeHolders;
-  uint public totalStaked;
 
+
+  
+  struct Stake{
+    uint amount;
+    uint lockedUntil;
+    uint lockPeriod;
+    uint stakePower;
+    bool exists;
+  }
+
+  mapping (address => Stake[]) public stakes;
+  uint public totalStaked;
+  uint public totalStakedPower;
+
+  mapping (address => uint) public stakeHolders;
+  mapping (address => uint) public stakerPower;
   mapping (address => uint) public stakerIndexes;
   mapping (address => uint) public stakerClaimed;
   uint public totalClaimed;

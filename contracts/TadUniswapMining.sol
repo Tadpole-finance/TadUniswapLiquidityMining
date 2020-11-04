@@ -9,7 +9,7 @@ import "./TadUniswapMiningStorage.sol";
 
 contract TadUniswapMining is Ownable, Pausable, TadUniswapMiningStorage {
   
-  event Staked(address indexed user, uint256 amount, uint256 total);
+  event Staked(address indexed user, uint256 amount, uint256 total, uint256 lockedUntil);
   event Unstaked(address indexed user, uint256 amount, uint256 total);
   event ClaimedTad(address indexed user, uint amount, uint total);
 
@@ -37,16 +37,18 @@ contract TadUniswapMining is Ownable, Pausable, TadUniswapMiningStorage {
   }
 
   // @notice stake some LP tokens
-  // @param _amount some amount of LP tokens, requires enought allowence from LP token smart contract
-  function stake(uint256 _amount) public whenNotPaused{
+  // @param _amount some amount of LP tokens, requires enought allowance from LP token smart contract
+  // @param _locked the locking period; option: 0, 30 days (2592000), 90 days (7776000), 180 days (15552000), 360 days (31104000)
+  function stake(uint256 _amount, uint256 _locked) public whenNotPaused{
       
-      createStake(msg.sender, _amount);
+      createStake(msg.sender, _amount, _locked);
   }
   
   // @notice internal function for staking
   function createStake(
     address _address,
-    uint256 _amount
+    uint256 _amount,
+    uint256 _locked
   )
     internal
   {
@@ -54,48 +56,69 @@ contract TadUniswapMining is Ownable, Pausable, TadUniswapMiningStorage {
     claimTad();
     
     require(block.number<endMiningBlockNum, "staking period has ended");
+    require(_locked == 0 || _locked == 30 days || _locked == 90 days || _locked == 180 days || _locked == 360 days  , "invalid locked period" );
       
     require(
       LPToken.transferFrom(_address, address(this), _amount),
       "Stake required");
 
+    uint _lockedUntil = block.timestamp.add(_locked);
+    uint _powerRatio;
+    uint _power;
+
+    if(_locked == 0){
+        _powerRatio = 1;
+    } else if(_locked == 30 days){
+        _powerRatio = 2;
+    } else if(_locked == 90 days){
+        _powerRatio = 3;
+    } else if(_locked == 180 days){
+        _powerRatio = 4;
+    } else if(_locked == 360 days){
+        _powerRatio = 5;
+    }
+
+    _power = _amount.mul(_powerRatio);
+
+    Stake memory _stake = Stake(_amount, _lockedUntil, _locked, _power, true);
+    stakes[_address].push(_stake);
+    stakerPower[_address] = stakerPower[_address].add(_power);
+
     stakeHolders[_address] = stakeHolders[_address].add(_amount);
-
-
     totalStaked = totalStaked.add(_amount);
-    
+    totalStakedPower = totalStakedPower.add(_power);
 
     emit Staked(
       _address,
       _amount,
-      stakeHolders[_address]);
+      stakeHolders[_address],
+      _lockedUntil);
   }
   
   // @notice unstake LP token
-  // @param _amount if 0, unstake all LP token available
-  function unstake(uint256 _amount) public whenNotPaused{
-  
-    if(_amount==0){
-      _amount = stakeHolders[msg.sender];
-    }
+  // @param _index the index of stakes array
+  function unstake(uint256 _index) public whenNotPaused{
 
-    if(_amount == 0){ // if staking balance == 0, do nothing
-      return;
-    }
+    require(stakes[msg.sender][_index].exists == true, "stake index doesn't exist");
 
-    withdrawStake(msg.sender, _amount);
+    withdrawStake(msg.sender, _index);
       
   }
   
   // @notice internal function for unstaking
   function withdrawStake(
     address _address,
-    uint256 _amount
+    uint256 _index
   )
     internal
   {
 
     claimTad();
+
+    require(stakes[_address][_index].lockedUntil <= block.timestamp, "the stake is still locked");
+
+    uint _amount = stakes[_address][_index].amount;
+    uint _power = stakes[_address][_index].stakePower;
 
     if(_amount > stakeHolders[_address]){ //if amount is larger than owned
       _amount = stakeHolders[_address];
@@ -105,6 +128,9 @@ contract TadUniswapMining is Ownable, Pausable, TadUniswapMiningStorage {
       LPToken.transfer(_address, _amount),
       "Unable to withdraw stake");
 
+    delete stakes[_address][_index];
+    stakerPower[_address] = stakerPower[_address].sub(_power);
+    totalStakedPower = totalStakedPower.sub(_power);
     stakeHolders[_address] = stakeHolders[_address].sub(_amount);
     totalStaked = totalStaked.sub(_amount);
 
@@ -145,7 +171,7 @@ contract TadUniswapMining is Ownable, Pausable, TadUniswapMiningStorage {
     
     if (deltaBlocks > 0 && totalStaked > 0) {
         uint tadAccrued = deltaBlocks.mul(tadPerBlock);
-        uint ratio = tadAccrued.mul(1e18).div(totalStaked); //multiple ratio to 1e18 to prevent rounding error
+        uint ratio = tadAccrued.mul(1e18).div(totalStakedPower); //multiple ratio to 1e18 to prevent rounding error
         _miningStateIndex = miningStateIndex.add(ratio); //index is 1e18 precision
         _miningStateBlock = blockNumber;
     } 
@@ -188,7 +214,7 @@ contract TadUniswapMining is Ownable, Pausable, TadUniswapMiningStorage {
         }
       
       uint deltaIndex = miningStateIndex.sub(stakerIndex);
-      uint tadDelta = deltaIndex.mul(stakeHolders[_address]).div(1e18);
+      uint tadDelta = deltaIndex.mul(stakerPower[_address]).div(1e18);
       
       return tadDelta;
           
