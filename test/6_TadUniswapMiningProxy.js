@@ -81,7 +81,7 @@ contract('TadUniswapMining', (accounts) => {
         await tadInstance.mint(miningProxyInstance.address, "100000000000000000000000000", { from: accounts[0] });
         await lpInstance.mint(accounts[0], "10000000000000000000000000", { from: accounts[0] });
         await lpInstance.approve(miningProxyInstance.address, "500000000000000000000000000", { from: accounts[0] });
-        await miningInstance.stake("1000000000000000000000", { from: accounts[0] });
+        await miningInstance.stake("1000000000000000000000", 0, { from: accounts[0] });
 
         newGenesisImplementation = await TadUniswapMining.new();
         await miningProxyInstance._setImplementation(newGenesisImplementation.address, {from: accounts[0]});
