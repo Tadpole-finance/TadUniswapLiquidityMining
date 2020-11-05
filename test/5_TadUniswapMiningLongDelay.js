@@ -58,7 +58,7 @@ contract('TadUniswapMining', (accounts) => {
 
     it('should stake', async()=>{
         for(i=0;i<10;i++){ //block 122-131
-            await miningInstance.stake(new BN("1000000000000000000000").mul(new BN(i+1)), {from: accounts[i]});
+            await miningInstance.stake(new BN("1000000000000000000000").mul(new BN(i+1)), 0, {from: accounts[i]});
 
             var stake = await miningInstance.stakeHolders(accounts[i]);
             assert.equal(stake.toString(), new BN("1000000000000000000000").mul(new BN(i+1)).toString(), 'invalid stake for account '+i);
@@ -68,13 +68,13 @@ contract('TadUniswapMining', (accounts) => {
     it('should stake until block 200', async()=>{
         for(i=0;i<68;i++){ //block 132-199
             j = i%10;
-            await miningInstance.stake(new BN("100000000000000000000").mul(new BN(i+1)), {from: accounts[j]});
+            await miningInstance.stake(new BN("100000000000000000000").mul(new BN(i+1)), 0, {from: accounts[j]});
         }
     });
 
-    it('should not able to stake after 200 blocks', async()=>{
+    it('should not be able to stake after 200 blocks', async()=>{
 
-        await truffleAssert.reverts(miningInstance.stake(new BN("100000000000000000000"), {from: accounts[0]}), "staking period has ended");
+        await truffleAssert.reverts(miningInstance.stake(new BN("100000000000000000000"), 0, {from: accounts[0]}), "staking period has ended");
 
     });
 
@@ -86,7 +86,10 @@ contract('TadUniswapMining', (accounts) => {
 
     it('should be able to unstake all accounts', async()=>{
         for(i=0;i<10;i++){
-            await miningInstance.unstake(0, {from: accounts[i]});
+            stakeCount = await miningInstance.stakeCount(accounts[i]);
+            for(j=0;j<stakeCount.toNumber();j++){
+                await miningInstance.unstake(0, {from: accounts[i]});
+            }
         }
     });
 

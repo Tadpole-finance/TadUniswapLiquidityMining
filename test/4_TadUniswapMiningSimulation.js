@@ -58,11 +58,11 @@ contract('TadUniswapMining', (accounts) => {
 
     it('should stake', async()=>{
         for(i=0;i<10;i++){ //block 25-34
-            await miningInstance.stake(new BN("1000000000000000000000").mul(new BN(i+1)), {from: accounts[i]});
+            await miningInstance.stake(new BN("1000000000000000000000").mul(new BN(i+1)), 0, {from: accounts[i]});
         }
         for(i=0;i<10;i++){
             var stake = await miningInstance.stakeHolders(accounts[i]);
-            assert.equal(stake.toString(), new BN("1000000000000000000000").mul(new BN(i+1)).toString(), 'invalid stake for account '+i);
+            assert.equal(stake.toString(), new BN("1000000000000000000000").mul(new BN(i+1)).toString(), 0, 'invalid stake for account '+i);
         }
     });
 
@@ -75,12 +75,12 @@ contract('TadUniswapMining', (accounts) => {
 
     });
 
-    it('should be able to claim half of the stake for 5 accounts', async()=>{
+    it('should be able to unstake for 5 accounts', async()=>{
 
         totalClaimed = new BN(0);
 
         for(i=0;i<5;i++){ //block 35-39
-            await miningInstance.unstake(new BN("1000000000000000000000").mul(new BN(i+1)).div(new BN(2)), {from: accounts[i]});
+            await miningInstance.unstake(0, {from: accounts[i]});
             totalClaimed = totalClaimed.add(await tadInstance.balanceOf(accounts[i]));
         }
         var balance = await lpInstance.balanceOf(miningInstance.address);
@@ -88,8 +88,8 @@ contract('TadUniswapMining', (accounts) => {
 
         var totalClaimedCont = await miningInstance.totalClaimed();
 
-        assert.equal(balance, "47500000000000000000000", 'Balance != 47500 LP');
-        assert.equal(totalStaked, "47500000000000000000000", 'totalStaked != 47500 LP');
+        assert.equal(balance, "40000000000000000000000", 'Balance != 40000 LP');
+        assert.equal(totalStaked, "40000000000000000000000", 'totalStaked != 40000 LP');
 
         assert.ok(totalClaimed.lt(maxClaimed), 'totalClaimed > maxClaimed');
         assert.equal(totalClaimedCont, totalClaimed.toString(), 'manual totalClaimed doesn\'t match totalClaimed() function');
@@ -103,7 +103,7 @@ contract('TadUniswapMining', (accounts) => {
             var balance_before = await miningInstance.stakeHolders(accounts[i]);
 
             var toStake = new BN("2500000000000000000000").mul(new BN(i+1));
-            await miningInstance.stake(toStake, {from: accounts[i]});
+            await miningInstance.stake(toStake, 0, {from: accounts[i]});
 
             var stake = await miningInstance.stakeHolders(accounts[i]);
             var correctStake = toStake.add(balance_before)
@@ -137,7 +137,7 @@ contract('TadUniswapMining', (accounts) => {
         for(i=0;i<150;i++){ //block 50-199
             j = i%10;
             // await miningInstance.doNothing();
-            await miningInstance.stake(new BN("100000000000000000000").mul(new BN(i+1)), {from: accounts[j]});
+            await miningInstance.stake(new BN("100000000000000000000").mul(new BN(i+1)), 0, {from: accounts[j]});
         }
     });
 
@@ -172,13 +172,17 @@ contract('TadUniswapMining', (accounts) => {
     it('should not able to stake after 200 blocks', async()=>{
         
         //block 200
-        await truffleAssert.reverts(miningInstance.stake(new BN("100000000000000000000"), {from: accounts[0]}), "staking period has ended");
+        await truffleAssert.reverts(miningInstance.stake(new BN("100000000000000000000"), 0, {from: accounts[0]}), "staking period has ended");
 
     });
 
     it('should be able to unstake 5 accounts', async()=>{
         for(i=0;i<5;i++){
-            await miningInstance.unstake(0, {from: accounts[i]});
+            stakeCount = await miningInstance.stakeCount(accounts[i]);
+            for(j=0;j<stakeCount.toNumber();j++){
+                await miningInstance.unstake(0, {from: accounts[i]});
+            }
+            
         }
     });
 
@@ -190,7 +194,11 @@ contract('TadUniswapMining', (accounts) => {
 
     it('should be able to unstake 5 accounts', async()=>{
         for(i=5;i<10;i++){
-            await miningInstance.unstake(0, {from: accounts[i]});
+            stakeCount = await miningInstance.stakeCount(accounts[i]);
+            for(j=0;j<stakeCount.toNumber();j++){
+                await miningInstance.unstake(0, {from: accounts[i]});
+            }
+            
         }
     });
 
@@ -208,6 +216,12 @@ contract('TadUniswapMining', (accounts) => {
 
         assert.equal(totalClaimed, totalClaimedCont.toString(), 'manual totalClaimed calculation is different with totalClaimed()');
 
+
+    });
+
+    it('should have 0 LP token', async()=>{
+        var balance = await lpInstance.balanceOf(miningInstance.address);
+        assert.equal(balance, 0, 'LP token is not 0');
 
     });
 
