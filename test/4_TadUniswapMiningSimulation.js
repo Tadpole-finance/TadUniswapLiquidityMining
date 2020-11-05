@@ -80,7 +80,8 @@ contract('TadUniswapMining', (accounts) => {
         totalClaimed = new BN(0);
 
         for(i=0;i<5;i++){ //block 35-39
-            await miningInstance.unstake(0, {from: accounts[i]});
+            stake = await miningInstance.stakes(accounts[i], 0);
+            await miningInstance.unstake(0, stake.amount, {from: accounts[i]});
             totalClaimed = totalClaimed.add(await tadInstance.balanceOf(accounts[i]));
         }
         var balance = await lpInstance.balanceOf(miningInstance.address);
@@ -180,7 +181,8 @@ contract('TadUniswapMining', (accounts) => {
         for(i=0;i<5;i++){
             stakeCount = await miningInstance.stakeCount(accounts[i]);
             for(j=0;j<stakeCount.toNumber();j++){
-                await miningInstance.unstake(0, {from: accounts[i]});
+                stake = await miningInstance.stakes(accounts[i], 0);
+                await miningInstance.unstake(0, stake.amount, {from: accounts[i]});
             }
             
         }
@@ -196,7 +198,8 @@ contract('TadUniswapMining', (accounts) => {
         for(i=5;i<10;i++){
             stakeCount = await miningInstance.stakeCount(accounts[i]);
             for(j=0;j<stakeCount.toNumber();j++){
-                await miningInstance.unstake(0, {from: accounts[i]});
+                stake = await miningInstance.stakes(accounts[i], 0);
+                await miningInstance.unstake(0, stake.amount, {from: accounts[i]});
             }
             
         }
