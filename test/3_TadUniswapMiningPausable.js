@@ -10,8 +10,8 @@ contract('TadUniswapMining', (accounts) => {
 
         await miningInstance.pause({from: accounts[0]});
 
-        await truffleAssert.reverts(miningInstance.stake(1, {from: accounts[0]}), "Pausable: paused");
-        await truffleAssert.reverts(miningInstance.unstake(1, {from: accounts[0]}), "Pausable: paused");
+        await truffleAssert.reverts(miningInstance.stake(1, 0, {from: accounts[0]}), "Pausable: paused");
+        await truffleAssert.reverts(miningInstance.unstake(0, {from: accounts[0]}), "Pausable: paused");
         await truffleAssert.reverts(miningInstance.claimTad({from: accounts[0]}), "Pausable: paused");
         
     });
