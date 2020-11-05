@@ -45,7 +45,7 @@ contract('TadUniswapMining', (accounts) => {
         miningInstance = await TadUniswapMining.deployed();
         
         //block 4
-        await miningInstance.stake("1000000000000000000000", { from: accounts[0] });
+        await miningInstance.stake("1000000000000000000000", 0, { from: accounts[0] });
 
         const stake = await miningInstance.stakeHolders(accounts[0]);
         assert.equal(stake, "1000000000000000000000", 'The stake is not 1000 LP Token');
@@ -89,7 +89,7 @@ contract('TadUniswapMining', (accounts) => {
         
         //stake 250 LP Token for account 1
         //block 102
-        await miningInstance.stake("250000000000000000000", { from: accounts[1] }); 
+        await miningInstance.stake("250000000000000000000", 0, { from: accounts[1] }); 
 
         //block 103
         await miningInstance.claimTad({ from: accounts[1] });
@@ -142,21 +142,21 @@ contract('TadUniswapMining', (accounts) => {
         await lpTokenTestInstance.approve(TadUniswapMining.address, "500000000000000000000000000", { from: accounts[2] });
         
         //block 112
-        await miningInstance.stake("1250000000000000000000", { from: accounts[2] }); 
+        await miningInstance.stake("1250000000000000000000", 0, { from: accounts[2] }); 
 
         stake = await miningInstance.stakeHolders(accounts[2]);
         assert.equal(stake, "1250000000000000000000", 'Stake account2 != 1250 LP Token');
 
     });
 
-    it('should be able to unstake 500 LP Token from account2', async()=>{
+    it('should be able to unstake LP Token from account2', async()=>{
         miningInstance = await TadUniswapMining.deployed();
 
         //block 113
-        await miningInstance.unstake("500000000000000000000", { from: accounts[2] }); 
+        await miningInstance.unstake(0, { from: accounts[2] }); 
 
         stake = await miningInstance.stakeHolders(accounts[2]);
-        assert.equal(stake, "750000000000000000000", 'Stake account2 != 750 LP Token');
+        assert.equal(stake, "0", 'Stake account2 != 0 LP Token');
     });
 
     it('should give correct claim balances after current block exceeds endMiningBlockNum', async()=>{
@@ -175,14 +175,14 @@ contract('TadUniswapMining', (accounts) => {
         balance1 = await tadTokenTestInstance.balanceOf(accounts[1]);
         balance2 = await tadTokenTestInstance.balanceOf(accounts[2]);
 
-        // 123.74+ (112−109)÷1250×1000×1.15 + (113−112)÷2500×1000×1.15 + (200−113)÷2000×1000×1.15 = 176.985
-        assert.equal(balance0.toString(), "176985000000000000000", 'balance account0 != 175.145 TAD');
+        // 123.74+ (112−109)÷1250×1000×1.15 + (113−112)÷2500×1000×1.15 + (200−113)÷1250×1000×1.15 = 207
+        assert.equal(balance0.toString(), "207000000000000000000", 'balance account0 != 207 TAD');
         
-        // (112−102)÷1250×250×1.15 + (113−112)÷2500×250×1.15 + (200−113)÷2000×250×1.15
-        assert.equal(balance1.toString(), "14921250000000000000", 'balance account1 != 14.92125 TAD');
+        // (112−102)÷1250×250×1.15 + (113−112)÷2500×250×1.15 + (200−113)÷1250×250×1.15
+        assert.equal(balance1.toString(), "22425000000000000000", 'balance account1 != 22.425 TAD');
         
-        // 0+(1.15÷2000×750)×(200−113)+(1.15÷2500×1250)×(113−112) = 38.09375
-        assert.equal(balance2.toString(), "38093750000000000000", 'balance account2 != 38.09375 TAD');
+        // 0+(1.15÷2500×1250)×(113−112) = 0.575
+        assert.equal(balance2.toString(), "575000000000000000", 'balance account2 != 0.575 TAD');
 
     });
 
@@ -196,7 +196,7 @@ contract('TadUniswapMining', (accounts) => {
 
         await miningInstance.unstake(0, { from: accounts[0] });
         await miningInstance.unstake(0, { from: accounts[1] });
-        await miningInstance.unstake(0, { from: accounts[2] });
+       // await miningInstance.unstake(0, { from: accounts[2] });
 
         balance0_after = await lpTokenTestInstance.balanceOf(accounts[0]);
         balance1_after = await lpTokenTestInstance.balanceOf(accounts[1]);
@@ -204,7 +204,7 @@ contract('TadUniswapMining', (accounts) => {
 
         assert.equal(new BN(balance0_after).sub(new BN(balance0_before)), "1000000000000000000000", 'unstake account0 != 1000 LP Token');
         assert.equal(new BN(balance1_after).sub(new BN(balance1_before)), "250000000000000000000", 'unstake account0 != 250 LP Token');
-        assert.equal(new BN(balance2_after).sub(new BN(balance2_before)), "750000000000000000000", 'unstake account0 != 1250 LP Token');
+        //assert.equal(new BN(balance2_after).sub(new BN(balance2_before)), "750000000000000000000", 'unstake account0 != 1250 LP Token');
 
     });
 
