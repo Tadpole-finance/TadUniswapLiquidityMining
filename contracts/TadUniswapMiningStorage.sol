@@ -46,6 +46,7 @@ contract TadUniswapMiningStorage {
   }
 
   mapping (address => Stake[]) public stakes;
+  mapping (address => uint) public stakeCount;
   uint public totalStaked;
   uint public totalStakedPower;
 

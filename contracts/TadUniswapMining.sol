@@ -82,6 +82,7 @@ contract TadUniswapMining is Ownable, Pausable, TadUniswapMiningStorage {
 
     Stake memory _stake = Stake(_amount, _lockedUntil, _locked, _power, true);
     stakes[_address].push(_stake);
+    stakeCount[_address] = stakeCount[_address].add(1);
     stakerPower[_address] = stakerPower[_address].add(_power);
 
     stakeHolders[_address] = stakeHolders[_address].add(_amount);
@@ -103,6 +104,14 @@ contract TadUniswapMining is Ownable, Pausable, TadUniswapMiningStorage {
 
     withdrawStake(msg.sender, _index);
       
+  }
+
+  // @notice internal function for removing stake and reorder the array
+  function removeStake(address _address, uint index) internal {
+      for (uint i = index; i < stakes[_address].length-1; i++) {
+          stakes[_address][i] = stakes[_address][i+1];
+      }
+      stakes[_address].pop();
   }
   
   // @notice internal function for unstaking
@@ -127,8 +136,10 @@ contract TadUniswapMining is Ownable, Pausable, TadUniswapMiningStorage {
     require(
       LPToken.transfer(_address, _amount),
       "Unable to withdraw stake");
-
-    delete stakes[_address][_index];
+    
+    removeStake(_address, _index);
+    stakeCount[_address] = stakeCount[_address].sub(1);
+    
     stakerPower[_address] = stakerPower[_address].sub(_power);
     totalStakedPower = totalStakedPower.sub(_power);
     stakeHolders[_address] = stakeHolders[_address].sub(_amount);
