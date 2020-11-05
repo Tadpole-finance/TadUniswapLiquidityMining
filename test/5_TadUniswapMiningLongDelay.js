@@ -88,7 +88,8 @@ contract('TadUniswapMining', (accounts) => {
         for(i=0;i<10;i++){
             stakeCount = await miningInstance.stakeCount(accounts[i]);
             for(j=0;j<stakeCount.toNumber();j++){
-                await miningInstance.unstake(0, {from: accounts[i]});
+                stake = await miningInstance.stakes(accounts[i], 0);
+                await miningInstance.unstake(0, stake.amount, {from: accounts[i]});
             }
         }
     });
