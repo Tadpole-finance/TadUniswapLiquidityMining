@@ -1,6 +1,7 @@
 //SPDX-License-Identifier: MIT
 
 pragma solidity ^0.6.0;
+pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
@@ -98,9 +99,10 @@ contract TadUniswapMining is Ownable, Pausable, TadUniswapMiningStorage {
   
   // @notice unstake LP token
   // @param _index the index of stakes array
-  function unstake(uint256 _index) public whenNotPaused{
+  function unstake(uint256 _index, uint256 _amount) public whenNotPaused{
 
     require(stakes[msg.sender][_index].exists == true, "stake index doesn't exist");
+    require(stakes[msg.sender][_index].amount == _amount, "stake amount doesn't match");
 
     withdrawStake(msg.sender, _index);
       
@@ -112,6 +114,10 @@ contract TadUniswapMining is Ownable, Pausable, TadUniswapMiningStorage {
           stakes[_address][i] = stakes[_address][i+1];
       }
       stakes[_address].pop();
+  }
+
+  function getStakes(address _address) public returns (Stake[] memory){
+    return stakes[_address];
   }
   
   // @notice internal function for unstaking
