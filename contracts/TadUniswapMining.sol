@@ -115,10 +115,6 @@ contract TadUniswapMining is Ownable, Pausable, TadUniswapMiningStorage {
       }
       stakes[_address].pop();
   }
-
-  function getStakes(address _address) public returns (Stake[] memory){
-    return stakes[_address];
-  }
   
   // @notice internal function for unstaking
   function withdrawStake(
