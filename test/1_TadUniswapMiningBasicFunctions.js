@@ -153,7 +153,7 @@ contract('TadUniswapMining', (accounts) => {
         miningInstance = await TadUniswapMining.deployed();
 
         //block 113
-        await miningInstance.unstake(0, { from: accounts[2] }); 
+        await miningInstance.unstake(0, "1250000000000000000000", { from: accounts[2] }); 
 
         stake = await miningInstance.stakeHolders(accounts[2]);
         assert.equal(stake, "0", 'Stake account2 != 0 LP Token');
@@ -194,8 +194,8 @@ contract('TadUniswapMining', (accounts) => {
         balance1_before = await lpTokenTestInstance.balanceOf(accounts[1]);
         balance2_before = await lpTokenTestInstance.balanceOf(accounts[2]);
 
-        await miningInstance.unstake(0, { from: accounts[0] });
-        await miningInstance.unstake(0, { from: accounts[1] });
+        await miningInstance.unstake(0, "1000000000000000000000", { from: accounts[0] });
+        await miningInstance.unstake(0, "250000000000000000000", { from: accounts[1] });
        // await miningInstance.unstake(0, { from: accounts[2] });
 
         balance0_after = await lpTokenTestInstance.balanceOf(accounts[0]);
