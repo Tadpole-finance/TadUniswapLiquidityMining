@@ -126,7 +126,9 @@ contract TadUniswapMining is Ownable, Pausable, TadUniswapMiningStorage {
 
     claimTad();
 
-    require(stakes[_address][_index].lockedUntil <= block.timestamp, "the stake is still locked");
+    if(block.number <= endMiningBlockNum){ //if current block is lower than endMiningBlockNum, check lockedUntil
+      require(stakes[_address][_index].lockedUntil <= block.timestamp, "the stake is still locked");
+    }
 
     uint _amount = stakes[_address][_index].amount;
     uint _power = stakes[_address][_index].stakePower;

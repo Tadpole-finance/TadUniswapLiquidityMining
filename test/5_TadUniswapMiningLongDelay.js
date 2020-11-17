@@ -58,15 +58,21 @@ contract('TadUniswapMining', (accounts) => {
 
     it('should stake', async()=>{
         for(i=0;i<10;i++){ //block 122-131
-            await miningInstance.stake(new BN("1000000000000000000000").mul(new BN(i+1)), 0, {from: accounts[i]});
+            await miningInstance.stake(new BN("1000000000000000000000").mul(new BN(i+1)), (86400*30), {from: accounts[i]});
 
             var stake = await miningInstance.stakeHolders(accounts[i]);
             assert.equal(stake.toString(), new BN("1000000000000000000000").mul(new BN(i+1)).toString(), 'invalid stake for account '+i);
         }
     });
 
+    it('should not be able to unstake locked stake', async()=>{
+        //block 132
+        await truffleAssert.reverts(miningInstance.unstake(0, new BN("1000000000000000000000"), {from: accounts[0]}), "the stake is still locked");
+
+    });
+
     it('should stake until block 200', async()=>{
-        for(i=0;i<68;i++){ //block 132-199
+        for(i=0;i<67;i++){ //block 133-199
             j = i%10;
             await miningInstance.stake(new BN("100000000000000000000").mul(new BN(i+1)), 0, {from: accounts[j]});
         }
