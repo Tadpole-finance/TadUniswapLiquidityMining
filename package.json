@@ -7,7 +7,7 @@
     "test": "test"
   },
   "dependencies": {
-    "truffle": "5.1.46",
+    "truffle": "5.7.1",
     "truffle-assertions": "0.9.2",
     "@openzeppelin/contracts": "3.2.0",
     "ganache-cli": "^6.10.2"
